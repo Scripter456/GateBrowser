@@ -5,12 +5,12 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "pack:win": "electron-builder --win --x64",
-    "pack:win-portable": "electron-builder --win portable --x64",
-    "pack:win-dir": "electron-builder --win dir --x64",
+    "pack:win": "electron-builder --win --x64 -c.win.signAndEditExecutable=false",
+    "pack:win-portable": "electron-builder --win portable --x64 -c.win.signAndEditExecutable=false",
+    "pack:win-dir": "electron-builder --win dir --x64 -c.win.signAndEditExecutable=false",
     "pack:linux": "electron-builder --linux",
     "pack:mac": "electron-builder --mac",
-    "dist": "electron-builder"
+    "dist": "electron-builder -c.win.signAndEditExecutable=false"
   },
   "keywords": [
     "browser",
@@ -31,14 +31,19 @@
       "output": "dist"
     },
     "win": {
+      "signAndEditExecutable": false,
       "target": [
         {
-          "target": "nsis",
-          "arch": ["x64"]
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         },
         {
-          "target": "portable",
-          "arch": ["x64"]
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },

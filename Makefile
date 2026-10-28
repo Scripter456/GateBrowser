@@ -23,22 +23,22 @@ help:
 	@echo ===================================================
 
 install:
-	cmd.exe /c "npm install"
+	cmd.exe /c "npm install && node node_modules\electron\install.js"
 
 start:
 	cmd.exe /c "npm start"
 
 # Compiles standalone normal .exe
 exe:
-	cmd.exe /c "npm run pack:win-portable"
+	cmd.exe /c "set CSC_IDENTITY_AUTO_DISCOVERY=false&& npm run pack:win-portable"
 
 build: exe
 
 build-win:
-	cmd.exe /c "npm run pack:win"
+	cmd.exe /c "set CSC_IDENTITY_AUTO_DISCOVERY=false&& npm run pack:win"
 
 build-win-installer:
-	cmd.exe /c "npx electron-builder --win nsis --x64"
+	cmd.exe /c "set CSC_IDENTITY_AUTO_DISCOVERY=false&& npx electron-builder --win nsis --x64 -c.win.signAndEditExecutable=false"
 
 build-linux:
 	cmd.exe /c "npm run pack:linux"
