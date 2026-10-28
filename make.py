@@ -10,9 +10,14 @@ import os
 import json
 import subprocess
 import re
-import platform
+import shutil
 
-PACKAGE_JSON_PATH = os.path.join(os.path.dirname(__file__), "package.json")
+# Ensure working directory is always the GateBrowser project root
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
+
+PACKAGE_JSON_PATH = os.path.join(BASE_DIR, "package.json")
+MAKEFILE_PATH = os.path.join(BASE_DIR, "Makefile")
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -81,10 +86,28 @@ def write_version(new_version):
         print(f"Error saving version: {e}")
         return False
 
+def resolve_make_cmd(target):
+    """Finds make command or falls back gracefully to direct commands if make is missing."""
+    make_bin = shutil.which("make")
+    if make_bin:
+        return f'"{make_bin}" -f "{MAKEFILE_PATH}" {target}'
+    # Direct fallback if make command is somehow not in PATH
+    fallback_map = {
+        "install": 'cmd.exe /c "npm install && node node_modules\\electron\\install.js"',
+        "start": 'cmd.exe /c "npm start"',
+        "exe": 'cmd.exe /c "npm run pack:win-portable"',
+        "build-win": 'cmd.exe /c "npm run pack:win"',
+        "build-linux": 'cmd.exe /c "npm run pack:linux"',
+        "build-mac": 'cmd.exe /c "npm run pack:mac"',
+        "clean": 'cmd.exe /c "if exist dist rmdir /s /q dist"'
+    }
+    return fallback_map.get(target, f"make {target}")
+
 def run_make_target(target):
-    cmd = f"make {target}"
-    print(f"\n[MAKEFILE] {cmd}\n" + "="*50)
-    subprocess.run(cmd, shell=True)
+    cmd = resolve_make_cmd(target)
+    print(f"\n[MAKEFILE] Running target: '{target}'")
+    print(f"[CMD] {cmd}\n" + "="*50)
+    subprocess.run(cmd, shell=True, cwd=BASE_DIR)
     print("="*50)
     print("Press ENTER to return to menu...")
     input()
