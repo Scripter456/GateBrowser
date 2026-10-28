@@ -1,0 +1,45 @@
+{
+  "name": "gate-browser",
+  "version": "1.0.0",
+  "description": "GateBrowser - Fast and sleek Chromium-based desktop browser",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack:win": "electron-builder --win --x64",
+    "pack:linux": "electron-builder --linux",
+    "pack:mac": "electron-builder --mac",
+    "dist": "electron-builder"
+  },
+  "keywords": [
+    "browser",
+    "chromium",
+    "gate-browser",
+    "electron"
+  ],
+  "author": "Scripter456",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.gatebrowser.app",
+    "productName": "GateBrowser",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    }
+  }
+}
