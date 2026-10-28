@@ -44,3 +44,4 @@ npm run pack:linux
 # Build for macOS
 npm run pack:mac
 ```
+

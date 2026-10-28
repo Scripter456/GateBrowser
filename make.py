@@ -2,7 +2,7 @@
 """
 GateBrowser Build TUI & Manager (make.py)
 Interactive Terminal UI for configuring build versions, selecting target OS editions,
-and triggering Makefile / build targets.
+and triggering Makefile targets.
 """
 
 import sys
@@ -65,9 +65,9 @@ def read_version():
     try:
         with open(PACKAGE_JSON_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            return data.get('version', '1.0.0')
+            return data.get('version', '0.0.1')
     except Exception:
-        return '1.0.0'
+        return '0.0.1'
 
 def write_version(new_version):
     try:
@@ -81,8 +81,9 @@ def write_version(new_version):
         print(f"Error saving version: {e}")
         return False
 
-def run_shell(cmd):
-    print(f"\n[EXEC] {cmd}\n" + "="*50)
+def run_make_target(target):
+    cmd = f"make {target}"
+    print(f"\n[MAKEFILE] {cmd}\n" + "="*50)
     subprocess.run(cmd, shell=True)
     print("="*50)
     print("Press ENTER to return to menu...")
@@ -94,7 +95,7 @@ def prompt_new_version(current_ver):
     print("           CHANGE GATEBROWSER VERSION             ")
     print("==================================================")
     print(f"Current version: {current_ver}\n")
-    print("Format: Major.Minor.Patch (e.g. 1.0.1, 1.1.0, 2.0.0)")
+    print("Format: Major.Minor.Patch (e.g. 0.0.2, 0.1.0, 1.0.0)")
     new_v = input("Enter new version (or leave blank to cancel): ").strip()
     if new_v:
         if re.match(r'^\d+\.\d+\.\d+$', new_v):
@@ -106,16 +107,18 @@ def prompt_new_version(current_ver):
 
 def main():
     selected_edition_idx = 0
-    editions = ["Windows (nsis x64)", "Linux (AppImage)", "macOS (dmg)"]
-    edition_targets = ["pack:win", "pack:linux", "pack:mac"]
+    editions = ["Windows (nsis + standalone .exe)", "Linux (AppImage)", "macOS (dmg)"]
+    make_targets = ["build-win", "build-linux", "build-mac"]
 
     selected_menu_idx = 0
     menu_items = [
         "Change Target Edition (Current: {})",
         "Change Build Version",
-        "Install Dependencies (npm install)",
-        "Run Browser in Dev Mode (npm start)",
-        "Build Standalone Installer for Selected Edition",
+        "Compile Standalone .exe (make exe)",
+        "Build for Selected Edition (make)",
+        "Install Dependencies (make install)",
+        "Run Browser in Dev Mode (make start)",
+        "Clean Build Artifacts (make clean)",
         "Exit"
     ]
 
@@ -167,16 +170,17 @@ def main():
             elif selected_menu_idx == 1:
                 prompt_new_version(ver)
             elif selected_menu_idx == 2:
-                cmd = "cmd.exe /c \"npm install\"" if os.name == 'nt' else "npm install"
-                run_shell(cmd)
+                run_make_target("exe")
             elif selected_menu_idx == 3:
-                cmd = "cmd.exe /c \"npm start\"" if os.name == 'nt' else "npm start"
-                run_shell(cmd)
+                target = make_targets[selected_edition_idx]
+                run_make_target(target)
             elif selected_menu_idx == 4:
-                target = edition_targets[selected_edition_idx]
-                cmd = f'cmd.exe /c "npm run {target}"' if os.name == 'nt' else f"npm run {target}"
-                run_shell(cmd)
+                run_make_target("install")
             elif selected_menu_idx == 5:
+                run_make_target("start")
+            elif selected_menu_idx == 6:
+                run_make_target("clean")
+            elif selected_menu_idx == 7:
                 print("\nGoodbye!")
                 break
         elif key in ('q', 'Q', 'ESC'):
