@@ -4,48 +4,121 @@
   <meta charset="UTF-8">
   <title>GateBrowser</title>
   <style>
+    :root {
+      --bg-chrome: rgba(26, 26, 30, 0.85);
+      --bg-toolbar: rgba(36, 36, 42, 0.7);
+      --bg-tab: rgba(255, 255, 255, 0.05);
+      --bg-tab-hover: rgba(255, 255, 255, 0.08);
+      --bg-tab-active: rgba(255, 255, 255, 0.14);
+      --accent: #0a84ff;
+      --text: #f5f5f7;
+      --text-muted: #8e8e93;
+      --border: rgba(255, 255, 255, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-pill: 9999px;
+      --shadow-sheet: 0 20px 40px rgba(0, 0, 0, 0.45);
+      --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       user-select: none;
     }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #18181b;
-      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background: #141417;
+      color: var(--text);
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
-    /* Tab Bar */
-    #tab-bar {
+
+    /* Top Chrome / Header */
+    #top-bar {
       display: flex;
       align-items: center;
-      background: #09090b;
-      padding: 6px 10px 0 10px;
-      overflow-x: auto;
-      gap: 6px;
+      background: var(--bg-chrome);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      padding: 8px 12px 6px 12px;
+      border-bottom: 1px solid var(--border);
+      -webkit-app-region: drag;
+      gap: 12px;
+      z-index: 10;
     }
+
+    /* macOS Traffic Light Buttons */
+    .traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 4px;
+      -webkit-app-region: no-drag;
+    }
+    .traffic-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .traffic-btn:hover {
+      transform: scale(1.12);
+      filter: brightness(1.1);
+    }
+    .traffic-btn:active {
+      transform: scale(0.95);
+    }
+    .btn-close { background: #ff5f56; border: 0.5px solid #e0443e; }
+    .btn-min { background: #ffbd2e; border: 0.5px solid #dea123; }
+    .btn-max { background: #27c93f; border: 0.5px solid #1aab29; }
+
+    /* Tabs Bar */
+    #tab-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      gap: 4px;
+      -webkit-app-region: no-drag;
+      scrollbar-width: none;
+    }
+    #tab-bar::-webkit-scrollbar {
+      display: none;
+    }
+
     .tab {
       display: flex;
       align-items: center;
-      background: #18181b;
-      color: #a1a1aa;
-      padding: 8px 14px;
-      border-radius: 8px 8px 0 0;
+      background: var(--bg-tab);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
       font-size: 13px;
+      font-weight: 500;
       max-width: 200px;
+      min-width: 110px;
       cursor: pointer;
       gap: 8px;
-      border-top: 2px solid transparent;
-      transition: all 0.15s ease;
+      transition: all 0.22s var(--transition-smooth);
+      position: relative;
+    }
+    .tab:hover {
+      background: var(--bg-tab-hover);
+      color: var(--text);
     }
     .tab.active {
-      background: #27272a;
-      color: #fafafa;
-      border-top: 2px solid #3b82f6;
+      background: var(--bg-tab-active);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     .tab-title {
       white-space: nowrap;
@@ -61,68 +134,96 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      color: #71717a;
+      font-size: 13px;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity 0.15s ease, background 0.15s ease;
+    }
+    .tab:hover .tab-close, .tab.active .tab-close {
+      opacity: 1;
     }
     .tab-close:hover {
-      background: #3f3f46;
-      color: #fafafa;
-    }
-    #new-tab-btn {
-      background: transparent;
-      border: none;
-      color: #a1a1aa;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 6px;
-    }
-    #new-tab-btn:hover {
-      background: #27272a;
+      background: rgba(255, 255, 255, 0.15);
       color: #fff;
     }
 
-    /* Navigation / Toolbar */
+    #new-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      transition: all 0.18s ease;
+      -webkit-app-region: no-drag;
+    }
+    #new-tab-btn:hover {
+      background: var(--bg-tab-hover);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    /* Toolbar / Navigation */
     #toolbar {
       display: flex;
       align-items: center;
-      background: #27272a;
-      padding: 8px 12px;
+      background: var(--bg-toolbar);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 7px 14px;
       gap: 8px;
-      border-bottom: 1px solid #3f3f46;
+      border-bottom: 1px solid var(--border);
+      z-index: 9;
     }
+
     .nav-btn {
       background: transparent;
       border: none;
-      color: #f4f4f5;
-      font-size: 15px;
-      padding: 6px 10px;
-      border-radius: 6px;
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s;
+      transition: all 0.2s var(--transition-smooth);
     }
     .nav-btn:hover {
-      background: #3f3f46;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    .nav-btn:active {
+      transform: scale(0.94);
     }
     .nav-btn:disabled {
-      color: #52525b;
+      color: rgba(255, 255, 255, 0.2);
       cursor: not-allowed;
+      transform: none;
     }
+    .nav-btn svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+    }
+
     #url-bar-container {
       flex: 1;
       display: flex;
       align-items: center;
-      background: #18181b;
-      border: 1px solid #3f3f46;
-      border-radius: 20px;
-      padding: 0 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 0 14px;
+      transition: all 0.25s var(--transition-smooth);
+      height: 34px;
     }
     #url-bar-container:focus-within {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 1px #3b82f6;
+      border-color: var(--accent);
+      background: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
     }
     #url-input {
       flex: 1;
@@ -130,16 +231,21 @@
       border: none;
       outline: none;
       color: #fafafa;
-      font-size: 13px;
-      padding: 7px 0;
+      font-size: 13.5px;
       user-select: text;
     }
 
-    /* Views */
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Webview Container */
     #webview-container {
       flex: 1;
       position: relative;
-      background: #fff;
+      background: #1e1e24;
     }
     webview {
       width: 100%;
@@ -147,36 +253,306 @@
       position: absolute;
       top: 0;
       left: 0;
-      display: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s var(--transition-smooth), transform 0.25s var(--transition-smooth);
+      transform: scale(0.995);
     }
     webview.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    /* macOS Floating Sheet Modal for Extensions & Plugins */
+    .sheet-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 50px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--transition-smooth);
+      z-index: 100;
+    }
+    .sheet-backdrop.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet-card {
+      width: 580px;
+      max-height: 80vh;
+      background: rgba(30, 30, 35, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow-sheet);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(-24px) scale(0.96);
+      transition: transform 0.35s var(--transition-smooth);
+    }
+    .sheet-backdrop.visible .sheet-card {
+      transform: translateY(0) scale(1);
+    }
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sheet-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .sheet-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--text-muted);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .sheet-close-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+    }
+    .sheet-body {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Plugin Card */
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .plugin-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      transition: background 0.18s;
+    }
+    .plugin-item:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+    .plugin-info h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .plugin-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* macOS Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: 0.25s var(--transition-smooth);
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.25s var(--transition-smooth);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Chrome Extension actions */
+    .ext-action-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s var(--transition-smooth);
+    }
+    .ext-action-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .ext-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ext-empty {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 14px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
     }
   </style>
 </head>
 <body>
-  <div id="tab-bar">
-    <div id="tabs-list" style="display: flex; gap: 4px;"></div>
-    <button id="new-tab-btn" title="New Tab">+</button>
-  </div>
+  <!-- Top Bar with Traffic Lights & Tabs -->
+  <div id="top-bar">
+    <div class="traffic-lights">
+      <button class="traffic-btn btn-close" id="btn-traffic-close" title="Close Window"></button>
+      <button class="traffic-btn btn-min" id="btn-traffic-min" title="Minimize Window"></button>
+      <button class="traffic-btn btn-max" id="btn-traffic-max" title="Maximize Window"></button>
+    </div>
 
-  <div id="toolbar">
-    <button class="nav-btn" id="btn-back" title="Back">&#8592;</button>
-    <button class="nav-btn" id="btn-forward" title="Forward">&#8594;</button>
-    <button class="nav-btn" id="btn-reload" title="Reload">&#8635;</button>
-    <button class="nav-btn" id="btn-home" title="Home">&#8962;</button>
-    <div id="url-bar-container">
-      <input type="text" id="url-input" placeholder="Search with Google or enter address" autocomplete="off" />
+    <div id="tab-bar">
+      <div id="tabs-list" style="display: flex; gap: 4px;"></div>
+      <button id="new-tab-btn" title="New Tab">+</button>
     </div>
   </div>
 
+  <!-- Main Navigation Toolbar -->
+  <div id="toolbar">
+    <button class="nav-btn" id="btn-back" title="Back">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </button>
+    <button class="nav-btn" id="btn-forward" title="Forward">
+      <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+    </button>
+    <button class="nav-btn" id="btn-reload" title="Reload">
+      <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+    </button>
+    <button class="nav-btn" id="btn-home" title="Home">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </button>
+
+    <div id="url-bar-container">
+      <input type="text" id="url-input" placeholder="Search with Google or enter web address..." autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div class="toolbar-actions">
+      <!-- Plugins & Extensions Button -->
+      <button class="nav-btn" id="btn-extensions-sheet" title="Extensions & Built-in Plugins">
+        <svg viewBox="0 0 24 24"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5s-1.12-2.5-2.5-2.5z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Browser Webviews Container -->
   <div id="webview-container"></div>
+
+  <!-- macOS Style Modal Sheet for Extensions & Plugins -->
+  <div class="sheet-backdrop" id="sheet-backdrop">
+    <div class="sheet-card">
+      <div class="sheet-header">
+        <span class="sheet-title">Gate Plugins & Chrome Extensions</span>
+        <button class="sheet-close-btn" id="sheet-close-btn">&times;</button>
+      </div>
+      <div class="sheet-body">
+        <!-- Built-in Plugins Section -->
+        <div>
+          <div class="section-title">Built-in Plugins</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="plugin-item">
+              <div class="plugin-info">
+                <h4>Ad & Tracker Guard</h4>
+                <p>Block obtrusive banner ads and analytical trackers</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-adblock" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="plugin-item">
+              <div class="plugin-info">
+                <h4>Force Dark Canvas</h4>
+                <p>Smoothly invert bright web pages into macOS dark mode</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-darkmode">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="plugin-item">
+              <div class="plugin-info">
+                <h4>Smart Reader Clean-Up</h4>
+                <p>Strips clutter and distraction for optimal reading</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-reader">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chrome Extensions Section -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="section-title" style="margin: 0;">Chrome Extensions (Unpacked)</div>
+            <button class="ext-action-btn" id="btn-install-extension">+ Add Extension</button>
+          </div>
+          <div class="ext-list" id="extensions-container">
+            <div class="ext-empty">No external Chrome extensions loaded yet. Click "+ Add Extension" to load an unpacked extension directory.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const HOME_URL = 'https://www.google.com';
     let tabs = [];
     let activeTabId = null;
 
+    // Elements
     const tabsListEl = document.getElementById('tabs-list');
     const webviewContainer = document.getElementById('webview-container');
     const urlInput = document.getElementById('url-input');
@@ -186,10 +562,108 @@
     const btnHome = document.getElementById('btn-home');
     const btnNewTab = document.getElementById('new-tab-btn');
 
+    // Traffic light window controls
+    document.getElementById('btn-traffic-close').addEventListener('click', () => window.gateAPI.windowControl('close'));
+    document.getElementById('btn-traffic-min').addEventListener('click', () => window.gateAPI.windowControl('minimize'));
+    document.getElementById('btn-traffic-max').addEventListener('click', () => window.gateAPI.windowControl('maximize'));
+
+    // Modal sheet controls
+    const sheetBackdrop = document.getElementById('sheet-backdrop');
+    const btnExtensionsSheet = document.getElementById('btn-extensions-sheet');
+    const sheetCloseBtn = document.getElementById('sheet-close-btn');
+
+    btnExtensionsSheet.addEventListener('click', () => {
+      refreshExtensionsList();
+      sheetBackdrop.classList.add('visible');
+    });
+
+    sheetCloseBtn.addEventListener('click', () => sheetBackdrop.classList.remove('visible'));
+    sheetBackdrop.addEventListener('click', (e) => {
+      if (e.target === sheetBackdrop) sheetBackdrop.classList.remove('visible');
+    });
+
+    // Built-in plugin state toggles
+    const toggleAdblock = document.getElementById('toggle-adblock');
+    const toggleDarkMode = document.getElementById('toggle-darkmode');
+    const toggleReader = document.getElementById('toggle-reader');
+
+    window.gateAPI.getPluginsConfig().then(cfg => {
+      if (cfg) {
+        toggleAdblock.checked = !!cfg.adblock;
+        toggleDarkMode.checked = !!cfg.darkMode;
+        toggleReader.checked = !!cfg.readerMode;
+      }
+    });
+
+    toggleAdblock.addEventListener('change', async (e) => {
+      await window.gateAPI.setPluginState('adblock', e.target.checked);
+    });
+
+    toggleDarkMode.addEventListener('change', async (e) => {
+      await window.gateAPI.setPluginState('darkMode', e.target.checked);
+      applyDarkModeToActiveTab(e.target.checked);
+    });
+
+    toggleReader.addEventListener('change', async (e) => {
+      await window.gateAPI.setPluginState('readerMode', e.target.checked);
+    });
+
+    function applyDarkModeToActiveTab(enable) {
+      const wv = getActiveWebview();
+      if (!wv) return;
+      if (enable) {
+        wv.insertCSS(`
+          html { filter: invert(90%) hue-rotate(180deg) !important; background: #111 !important; }
+          img, video, canvas { filter: invert(100%) hue-rotate(180deg) !important; }
+        `);
+      } else {
+        wv.reload();
+      }
+    }
+
+    // Chrome Extensions Management
+    const extensionsContainer = document.getElementById('extensions-container');
+    const btnInstallExtension = document.getElementById('btn-install-extension');
+
+    async function refreshExtensionsList() {
+      const exts = await window.gateAPI.getExtensions();
+      extensionsContainer.innerHTML = '';
+      if (!exts || exts.length === 0) {
+        extensionsContainer.innerHTML = '<div class="ext-empty">No external Chrome extensions loaded yet. Click "+ Add Extension" to load an unpacked extension directory.</div>';
+        return;
+      }
+
+      exts.forEach(ext => {
+        const item = document.createElement('div');
+        item.className = 'plugin-item';
+        item.innerHTML = `
+          <div class="plugin-info">
+            <h4>${ext.name} <span style="font-size:11px; color:#8e8e93;">v${ext.version}</span></h4>
+            <p>${ext.description || 'Custom Chrome Extension'}</p>
+          </div>
+          <button style="background: rgba(255,59,48,0.2); color: #ff453a; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Remove</button>
+        `;
+        item.querySelector('button').addEventListener('click', async () => {
+          await window.gateAPI.removeExtension(ext.id);
+          refreshExtensionsList();
+        });
+        extensionsContainer.appendChild(item);
+      });
+    }
+
+    btnInstallExtension.addEventListener('click', async () => {
+      const res = await window.gateAPI.addExtensionDialog();
+      if (res && res.success) {
+        refreshExtensionsList();
+      } else if (res && res.reason && res.reason !== 'canceled') {
+        alert(res.reason);
+      }
+    });
+
+    // Tab & Navigation Engine
     function createTab(initialUrl = HOME_URL) {
       const id = 'tab-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-      
-      // Tab button
+
       const tabEl = document.createElement('div');
       tabEl.className = 'tab';
       tabEl.id = 'tab-btn-' + id;
@@ -207,7 +681,6 @@
         closeTab(id);
       });
 
-      // Webview
       const webview = document.createElement('webview');
       webview.id = 'webview-' + id;
       webview.src = initialUrl;
@@ -288,9 +761,7 @@
       try {
         btnBack.disabled = !wv.canGoBack();
         btnForward.disabled = !wv.canGoForward();
-      } catch (err) {
-        // webview not fully loaded
-      }
+      } catch (err) {}
     }
 
     function navigate(input) {
@@ -304,15 +775,11 @@
         }
       }
       const wv = getActiveWebview();
-      if (wv) {
-        wv.loadURL(target);
-      }
+      if (wv) wv.loadURL(target);
     }
 
     urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        navigate(urlInput.value);
-      }
+      if (e.key === 'Enter') navigate(urlInput.value);
     });
 
     btnBack.addEventListener('click', () => {
@@ -330,17 +797,11 @@
       if (wv) wv.reload();
     });
 
-    btnHome.addEventListener('click', () => {
-      navigate(HOME_URL);
-    });
+    btnHome.addEventListener('click', () => navigate(HOME_URL));
+    btnNewTab.addEventListener('click', () => createTab(HOME_URL));
 
-    btnNewTab.addEventListener('click', () => {
-      createTab(HOME_URL);
-    });
-
-    // Initialize with first tab
+    // Initial tab
     createTab(HOME_URL);
   </script>
 </body>
 </html>
-
